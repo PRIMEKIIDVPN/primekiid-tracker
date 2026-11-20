@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="st">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRIMEKIID TRACKER</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #ffffff;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .card {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 400px;
+      margin: 20px auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    button {
+      background-color: #00c853;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+    button:hover { background-color: #009624; }
+    #status { margin-top: 15px; font-size: 14px; color: #bdbdbd; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>📍 PRIMEKIID TRACKER</h2>
+    <p id="status">E emetse ho qala...</p>
+    <button onclick="sendLocation()">Romela Sebaka (Location)</button>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://gstatic.com";
+    import { getDatabase, ref, set } from "https://gstatic.com";
+
+    // NKA SEBAKA SA LINTLHA TSENA KA TSA HAU TSA FIREBASE
+    const firebaseConfig = {
+      apiKey: "KENYA_API_KEY_MONA",
+      authDomain: "KENYA_AUTH_DOMAIN_MONA",
+      databaseURL: "KENYA_DATABASE_URL_MONA",
+      projectId: "KENYA_PROJECT_ID_MONA",
+      storageBucket: "KENYA_STORAGE_BUCKET_MONA",
+      messagingSenderId: "KENYA_SENDER_ID_MONA",
+      appId: "KENYA_APP_ID_MONA"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.sendLocation = function() {
+      const statusEl = document.getElementById('status');
+      if (!navigator.geolocation) {
+        statusEl.textContent = "GPS ha e fumanehe fonong ena.";
+        return;
+      }
+
+      statusEl.textContent = "E batla sebaka sa hau...";
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          set(ref(db, 'tracker/device1'), {
+            latitude: lat,
+            longitude: lng,
+            updatedAt: new Date().toLocaleString()
+          }).then(() => {
+            statusEl.textContent = `Sebaka se rometsoe! (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+          }).catch((error) => {
+            statusEl.textContent = "Phoso ea Firebase: " + error.message;
+          });
+        },
+        (error) => {
+          statusEl.textContent = "Phoso ea GPS: " + error.message;
+        }
+      );
+    };
+
+    // Ngolisa Service Worker (sw.js)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('Service Worker e sebetsa!'))
+        .catch((err) => console.log('Phoso ea SW:', err));
+    }
+  </script>
+</body>
+</html>
